@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "f1_data" {
   bucket = "f1-data-platform"
 
   tags = {
-    Project     = "f1-data-platform"
+    Project = "f1-data-platform"
   }
 }
 
