@@ -24,19 +24,19 @@ def process_reference_data(
 
     write_parquet(
         races_to_records(races),
-        Path(f"processed/{season}/races.parquet"),
+        Path(f"data_collected/{season}/races/races.parquet"),
         bucket=bucket,
     )
 
     write_parquet(
         drivers_to_records(drivers),
-        Path(f"processed/{season}/drivers.parquet"),
+        Path(f"data_collected/{season}/drivers/drivers.parquet"),
         bucket=bucket,
     )
 
     write_parquet(
         constructors_to_records(constructors),
-        Path(f"processed/{season}/constructors.parquet"),
+        Path(f"data_collected/{season}/constructors/constructors.parquet"),
         bucket=bucket,
     )
 
@@ -57,10 +57,16 @@ def process_race_results(
                 print("  ○ Race has not happened yet")
                 continue
 
-            result_key = results_prefix / f"round={race.round}.parquet"
+            result_key = (
+                results_prefix
+                / f"round={race.round}"
+                / "results.parquet"
+            )
+
+            print(f"Checking result key: {result_key}")
 
             if parquet_exists(result_key, bucket):
-                print("  ○ Results already exist, skipping")
+                print(f"  ○ Results already exist at {result_key}, skipping")
                 continue
 
             results = client.get_results(season, race.round)
@@ -85,7 +91,7 @@ def process_race_results(
 def run_pipeline(bucket: str | None = None) -> None:
     client = JolpicaClient()
 
-    results_prefix = Path(f"processed/{SEASON}/results")
+    results_prefix = Path(f"data_collected/{SEASON}/results")
 
     races = process_reference_data(
         client,

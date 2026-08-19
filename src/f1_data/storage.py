@@ -9,8 +9,12 @@ def parquet_exists(
     output_path: Path,
     bucket: str | None = None,
 ) -> bool:
+    print(f"parquet_exists: bucket={bucket!r}, key={str(output_path)!r}")
+
     if bucket is None:
-        return output_path.exists()
+        exists = output_path.exists()
+        print(f"parquet_exists: local exists={exists}")
+        return exists
 
     s3 = boto3.client("s3")
 
@@ -19,12 +23,16 @@ def parquet_exists(
             Bucket=bucket,
             Key=str(output_path),
         )
+        print("parquet_exists: S3 object EXISTS")
+        return True
     except s3.exceptions.ClientError as exc:
-        if exc.response["Error"]["Code"] == "404":
-            return False
-        raise
+        error_code = exc.response["Error"]["Code"]
+        print(f"parquet_exists: S3 error={error_code!r}")
 
-    return True
+        if error_code in ("404", "NoSuchKey", "NotFound"):
+            return False
+
+        raise
 
 def write_parquet(
     records: list[dict],

@@ -27,7 +27,8 @@ def test_existing_results_are_skipped(tmp_path: Path) -> None:
     results_path = tmp_path / "results"
     results_path.mkdir()
 
-    result_path = results_path / "round=1.parquet"
+    result_path = results_path / "round=1" / "results.parquet"
+    result_path.parent.mkdir(parents=True)
     result_path.touch()
 
     process_race_results(
@@ -78,7 +79,7 @@ def test_new_results_are_processed(tmp_path: Path) -> None:
     results_path = tmp_path / "results"
     results_path.mkdir()
 
-    result_path = results_path / "round=1.parquet"
+    result_path = results_path / "round=1" / "results.parquet"
 
     process_race_results(
         client,
