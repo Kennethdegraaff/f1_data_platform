@@ -6,7 +6,5 @@ resource "aws_ecr_repository" "f1_data_platform" {
     scan_on_push = true
   }
 
-  tags = {
-    Project = "f1-data-platform"
-  }
+  tags = local.common_tags
 }

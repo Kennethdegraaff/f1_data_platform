@@ -4,7 +4,7 @@ resource "aws_glue_catalog_table" "races" {
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://f1-data-platform/data_collected/2026/races/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/races/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
@@ -70,7 +70,7 @@ resource "aws_glue_catalog_table" "drivers" {
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://f1-data-platform/data_collected/2026/drivers/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/drivers/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
@@ -121,7 +121,7 @@ resource "aws_glue_catalog_table" "constructors" {
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://f1-data-platform/data_collected/2026/constructors/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/constructors/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
@@ -152,7 +152,7 @@ resource "aws_glue_catalog_table" "results" {
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://f1-data-platform/data_collected/2026/results/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/results/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 

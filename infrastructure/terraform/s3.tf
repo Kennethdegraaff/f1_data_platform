@@ -1,9 +1,7 @@
 resource "aws_s3_bucket" "f1_data" {
   bucket = "f1-data-platform"
 
-  tags = {
-    Project = "f1-data-platform"
-  }
+  tags = local.common_tags
 }
 
 resource "aws_s3_bucket_public_access_block" "f1_data" {

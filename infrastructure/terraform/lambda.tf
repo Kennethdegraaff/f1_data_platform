@@ -15,7 +15,5 @@ resource "aws_lambda_function" "f1_data_platform" {
     }
   }
 
-  tags = {
-    Project = "f1-data-platform"
-  }
+  tags = local.common_tags
 }
