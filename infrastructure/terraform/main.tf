@@ -12,7 +12,7 @@ terraform {
     bucket = "f1-data-platform-terraform-state"
     key    = "f1-data-platform/terraform.tfstate"
     region = "eu-central-1"
-  }  
+  }
 }
 
 provider "aws" {
