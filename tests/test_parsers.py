@@ -1,4 +1,9 @@
-from f1_data.parsers import parse_races
+from f1_data.parsers import (
+    parse_constructors,
+    parse_drivers,
+    parse_races,
+    parse_results,
+)
 
 
 def test_parse_races():
@@ -42,3 +47,161 @@ def test_parse_races():
     assert race.circuit.country == "Australia"
     assert race.circuit.latitude == -37.8497
     assert race.circuit.longitude == 144.968
+
+def test_parse_drivers():
+    data = {
+        "MRData": {
+            "DriverTable": {
+                "season": "2026",
+                "Drivers": [
+                    {
+                        "driverId": "albon",
+                        "permanentNumber": "23",
+                        "code": "ALB",
+                        "givenName": "Alexander",
+                        "familyName": "Albon",
+                        "dateOfBirth": "1996-03-23",
+                        "nationality": "Thai",
+                    },
+                    {
+                        "driverId": "paul_aron",
+                        "givenName": "Paul",
+                        "familyName": "Aron",
+                    },
+                ]
+            }
+        }
+    }
+
+    drivers = parse_drivers(data)
+
+    assert len(drivers) == 2
+
+    driver = drivers[0]
+
+    assert driver.id == "albon"
+    assert driver.permanent_number == "23"
+    assert driver.code == "ALB"
+    assert driver.first_name == "Alexander"
+    assert driver.last_name == "Albon"
+    assert driver.date_of_birth is not None
+    assert driver.date_of_birth.isoformat() == "1996-03-23"
+    assert driver.nationality == "Thai"
+
+    driver_without_optional_fields = drivers[1]
+
+    assert driver_without_optional_fields.id == "paul_aron"
+    assert driver_without_optional_fields.first_name == "Paul"
+    assert driver_without_optional_fields.last_name == "Aron"
+    assert driver_without_optional_fields.permanent_number is None
+    assert driver_without_optional_fields.code is None
+    assert driver_without_optional_fields.date_of_birth is None
+    assert driver_without_optional_fields.nationality is None
+
+def test_parse_constructors():
+    data = {
+        "MRData": {
+            "ConstructorTable": {
+                "season": "2026",
+                "Constructors": [
+                    {
+                        "constructorId": "ferrari",
+                        "name": "Ferrari",
+                        "nationality": "Italian",
+                    },
+                    {
+                        "constructorId": "mclaren",
+                        "name": "McLaren",
+                        "nationality": "British",
+                    },
+                ]
+            }
+        }
+    }
+
+    constructors = parse_constructors(data)
+
+    assert len(constructors) == 2
+
+    constructor = constructors[0]
+
+    assert constructor.id == "ferrari"
+    assert constructor.name == "Ferrari"
+    assert constructor.nationality == "Italian"
+
+def test_parse_results():
+    data = {
+        "MRData": {
+            "RaceTable": {
+                "season": "2026",
+                "round": "1",
+                "Races": [
+                    {
+                        "season": "2026",
+                        "round": "1",
+                        "raceName": "Australian Grand Prix",
+                        "Circuit": {
+                            "circuitId": "albert_park",
+                        },
+                        "Results": [
+                            {
+                                "number": "63",
+                                "position": "1",
+                                "positionText": "1",
+                                "points": "25",
+                                "Driver": {
+                                    "driverId": "russell",
+                                },
+                                "Constructor": {
+                                    "constructorId": "mercedes",
+                                },
+                                "grid": "1",
+                                "laps": "58",
+                                "status": "Finished",
+                                "Time": {
+                                    "millis": "4986801",
+                                    "time": "1:23:06.801",
+                                },
+                                "FastestLap": {
+                                    "rank": "6",
+                                    "lap": "21",
+                                    "Time": {
+                                        "time": "1:22.670",
+                                    },
+                                },
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+    }
+
+    results = parse_results(data)
+
+    assert len(results) == 1
+
+    result = results[0]
+
+    assert result.season == 2026
+    assert result.round == 1
+    assert result.race_name == "Australian Grand Prix"
+    assert result.circuit_id == "albert_park"
+
+    assert result.driver_id == "russell"
+    assert result.constructor_id == "mercedes"
+
+    assert result.number == "63"
+    assert result.position == 1
+    assert result.position_text == "1"
+    assert result.points == 25
+    assert result.grid == 1
+    assert result.laps == 58
+    assert result.status == "Finished"
+
+    assert result.time_millis == 4986801
+    assert result.time == "1:23:06.801"
+
+    assert result.fastest_lap_rank == 6
+    assert result.fastest_lap == 21
+    assert result.fastest_lap_time == "1:22.670"

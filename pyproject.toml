@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "f1-data-platform"
 version = "0.1.0"
 description = "A Formula 1 data platform built with Python, AWS and Terraform."
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.15"
+
 dependencies = [
     "httpx>=0.28,<1.0",
     "pydantic>=2.0,<3.0",
@@ -18,6 +19,23 @@ where = ["src"]
 
 [project.optional-dependencies]
 dev = [
+    "boto3>=1.40,<2.0",
     "pytest>=8,<9",
     "respx>=0.22,<1.0",
+    "ruff>=0.12,<1.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "SIM",
+    "DTZ",
+    "BLE",
 ]
