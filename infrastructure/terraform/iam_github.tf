@@ -35,7 +35,7 @@ resource "aws_iam_role" "github_actions" {
           }
 
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:Kennethdegraaff/f1_data_platform:ref:refs/heads/main"
+            "token.actions.githubusercontent.com:sub" = "repo:Kennethdegraaff@145026199/f1_data_platform@1329715143:ref:refs/heads/main"
           }
         }
       }
