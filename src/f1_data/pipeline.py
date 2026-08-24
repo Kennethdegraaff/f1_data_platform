@@ -13,10 +13,11 @@ from f1_data.transformers import (
 
 SEASON = 2026
 
+
 def process_reference_data(
     client: JolpicaClient,
     season: int,
-    bucket: str | None = None,
+    bucket: str,
 ) -> list[Race]:
     races = client.get_races(season)
     drivers = client.get_drivers(season)
@@ -42,12 +43,13 @@ def process_reference_data(
 
     return races
 
+
 def process_race_results(
     client: JolpicaClient,
     races: list[Race],
     season: int,
     results_prefix: Path,
-    bucket: str | None = None,
+    bucket: str,
 ) -> None:
     for race in races:
         try:
@@ -66,7 +68,9 @@ def process_race_results(
             print(f"Checking result key: {result_key}")
 
             if parquet_exists(result_key, bucket):
-                print(f"  ○ Results already exist at {result_key}, skipping")
+                print(
+                    f"  ○ Results already exist at {result_key}, skipping"
+                )
                 continue
 
             results = client.get_results(season, race.round)
@@ -88,7 +92,8 @@ def process_race_results(
         except JolpicaAPIError as exc:
             print(f"  ✗ Failed round {race.round}: {exc}")
 
-def run_pipeline(bucket: str | None = None) -> None:
+
+def run_pipeline(bucket: str) -> None:
     client = JolpicaClient()
 
     results_prefix = Path(f"data_collected/{SEASON}/results")

@@ -15,5 +15,11 @@ resource "aws_lambda_function" "f1_data_platform" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [
+      image_uri,
+    ]
+  }
+
   tags = local.common_tags
 }
