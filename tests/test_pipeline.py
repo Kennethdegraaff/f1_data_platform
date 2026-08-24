@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -114,12 +114,22 @@ def test_future_races_are_skipped() -> None:
         ),
     )
 
-    process_race_results(
-        client,
-        [race],
-        2026,
-        Path("data_collected/2026/results"),
-        bucket="f1-data-platform",
-    )
+    with patch(
+        "f1_data.pipeline.datetime",
+    ) as mock_datetime:
+        mock_datetime.now.return_value = datetime(
+            2026,
+            8,
+            22,
+            tzinfo=UTC,
+        )
+
+        process_race_results(
+            client,
+            [race],
+            2026,
+            Path("data_collected/2026/results"),
+            bucket="f1-data-platform",
+        )
 
     client.get_results.assert_not_called()
