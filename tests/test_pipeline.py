@@ -1,12 +1,12 @@
 from datetime import date
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from f1_data.models import Circuit, Race, Result
 from f1_data.pipeline import process_race_results
 
 
-def test_existing_results_are_skipped(tmp_path: Path) -> None:
+def test_existing_results_are_skipped() -> None:
     client = Mock()
 
     race = Race(
@@ -24,23 +24,19 @@ def test_existing_results_are_skipped(tmp_path: Path) -> None:
         ),
     )
 
-    results_path = tmp_path / "results"
-    results_path.mkdir()
-
-    result_path = results_path / "round=1" / "results.parquet"
-    result_path.parent.mkdir(parents=True)
-    result_path.touch()
-
-    process_race_results(
-        client,
-        [race],
-        2026,
-        results_path,
-    )
+    with patch("f1_data.pipeline.parquet_exists", return_value=True):
+        process_race_results(
+            client,
+            [race],
+            2026,
+            Path("data_collected/2026/results"),
+            bucket="f1-data-platform",
+        )
 
     client.get_results.assert_not_called()
 
-def test_new_results_are_processed(tmp_path: Path) -> None:
+
+def test_new_results_are_processed() -> None:
     client = Mock()
 
     race = Race(
@@ -76,23 +72,31 @@ def test_new_results_are_processed(tmp_path: Path) -> None:
 
     client.get_results.return_value = [result]
 
-    results_path = tmp_path / "results"
-    results_path.mkdir()
-
-    result_path = results_path / "round=1" / "results.parquet"
-
-    process_race_results(
-        client,
-        [race],
-        2026,
-        results_path,
-    )
+    with (
+        patch("f1_data.pipeline.parquet_exists", return_value=False),
+        patch("f1_data.pipeline.write_parquet") as mock_write,
+    ):
+        process_race_results(
+            client,
+            [race],
+            2026,
+            Path("data_collected/2026/results"),
+            bucket="f1-data-platform",
+        )
 
     client.get_results.assert_called_once_with(2026, 1)
 
-    assert result_path.exists()
+    mock_write.assert_called_once()
 
-def test_future_races_are_skipped(tmp_path: Path) -> None:
+    call_args = mock_write.call_args
+
+    assert call_args.args[1] == Path(
+        "data_collected/2026/results/round=1/results.parquet"
+    )
+    assert call_args.kwargs["bucket"] == "f1-data-platform"
+
+
+def test_future_races_are_skipped() -> None:
     client = Mock()
 
     race = Race(
@@ -110,17 +114,12 @@ def test_future_races_are_skipped(tmp_path: Path) -> None:
         ),
     )
 
-    results_path = tmp_path / "results"
-    results_path.mkdir()
-
     process_race_results(
         client,
         [race],
         2026,
-        results_path,
+        Path("data_collected/2026/results"),
+        bucket="f1-data-platform",
     )
 
     client.get_results.assert_not_called()
-
-    result_path = results_path / "round=12.parquet"
-    assert not result_path.exists()

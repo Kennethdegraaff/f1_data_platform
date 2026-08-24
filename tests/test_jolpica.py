@@ -8,12 +8,15 @@ from f1_data.jolpica import JolpicaAPIError, JolpicaClient
 @respx.mock
 def test_get_races():
     route = respx.get(
-        "https://api.jolpi.ca/ergast/f1/2026.json"
+        "https://api.jolpi.ca/ergast/f1/2026.json?limit=30&offset=0"
     ).mock(
         return_value=Response(
             200,
             json={
                 "MRData": {
+                    "limit": "100",
+                    "offset": "0",
+                    "total": "1",
                     "RaceTable": {
                         "Races": [
                             {
@@ -33,7 +36,7 @@ def test_get_races():
                                 "date": "2026-03-08",
                             }
                         ]
-                    }
+                    },
                 }
             },
         )
@@ -48,9 +51,89 @@ def test_get_races():
     assert races[0].name == "Australian Grand Prix"
     assert races[0].season == 2026
 
+
+@respx.mock
+def test_get_drivers_handles_pagination():
+    first_page = respx.get(
+        "https://api.jolpi.ca/ergast/f1/2026/drivers.json?limit=30&offset=0"
+    ).mock(
+        return_value=Response(
+            200,
+            json={
+                "MRData": {
+                    "limit": "30",
+                    "offset": "0",
+                    "total": "32",
+                    "DriverTable": {
+                        "season": "2026",
+                        "Drivers": [
+                            {
+                                "driverId": "russell",
+                                "permanentNumber": "63",
+                                "code": "RUS",
+                                "givenName": "George",
+                                "familyName": "Russell",
+                                "dateOfBirth": "1998-02-15",
+                                "nationality": "British",
+                            }
+                        ],
+                    },
+                }
+            },
+        )
+    )
+
+    second_page = respx.get(
+        "https://api.jolpi.ca/ergast/f1/2026/drivers.json?limit=30&offset=30"
+    ).mock(
+        return_value=Response(
+            200,
+            json={
+                "MRData": {
+                    "limit": "30",
+                    "offset": "30",
+                    "total": "32",
+                    "DriverTable": {
+                        "season": "2026",
+                        "Drivers": [
+                            {
+                                "driverId": "max_verstappen",
+                                "permanentNumber": "3",
+                                "code": "VER",
+                                "givenName": "Max",
+                                "familyName": "Verstappen",
+                                "dateOfBirth": "1997-09-30",
+                                "nationality": "Dutch",
+                            }
+                        ],
+                    },
+                }
+            },
+        )
+    )
+
+    client = JolpicaClient()
+
+    drivers = client.get_drivers(2026)
+
+    assert first_page.called
+    assert second_page.called
+
+    assert len(drivers) == 2
+
+    driver_ids = [driver.id for driver in drivers]
+
+    assert "russell" in driver_ids
+    assert "max_verstappen" in driver_ids
+
+    client = JolpicaClient()
+
 def test_get_results(respx_mock):
     payload = {
         "MRData": {
+            "limit": "100",
+            "offset": "0",
+            "total": "1",
             "RaceTable": {
                 "season": "2026",
                 "round": "1",
@@ -80,13 +163,13 @@ def test_get_results(respx_mock):
                             }
                         ],
                     }
-                ]
-            }
+                ],
+            },
         }
     }
 
     respx_mock.get(
-        "https://api.jolpi.ca/ergast/f1/2026/1/results.json"
+        "https://api.jolpi.ca/ergast/f1/2026/1/results.json?limit=30&offset=0"
     ).mock(return_value=Response(200, json=payload))
 
     client = JolpicaClient()
@@ -99,20 +182,30 @@ def test_get_results(respx_mock):
     assert results[0].position == 1
     assert results[0].points == 25
 
+
 def test_get_results_retries_after_429(respx_mock):
-    url = "https://api.jolpi.ca/ergast/f1/2026/1/results.json"
+    url = (
+        "https://api.jolpi.ca/ergast/f1/2026/1/results.json"
+        "?limit=30&offset=0"
+    )
 
     responses = [
         Response(429),
-        Response(200, json={
-            "MRData": {
-                "RaceTable": {
-                    "season": "2026",
-                    "round": "1",
-                    "Races": [],
+        Response(
+            200,
+            json={
+                "MRData": {
+                    "limit": "100",
+                    "offset": "0",
+                    "total": "0",
+                    "RaceTable": {
+                        "season": "2026",
+                        "round": "1",
+                        "Races": [],
+                    },
                 }
-            }
-        }),
+            },
+        ),
     ]
 
     route = respx_mock.get(url).mock(
@@ -126,8 +219,12 @@ def test_get_results_retries_after_429(respx_mock):
     assert route.call_count == 2
     assert results == []
 
+
 def test_get_results_fails_after_three_429s(respx_mock):
-    url = "https://api.jolpi.ca/ergast/f1/2026/1/results.json"
+    url = (
+        "https://api.jolpi.ca/ergast/f1/2026/1/results.json"
+        "?limit=30&offset=0"
+    )
 
     respx_mock.get(url).mock(
         side_effect=[

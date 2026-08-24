@@ -17,11 +17,47 @@ class JolpicaAPIError(Exception):
 
 class JolpicaClient:
     BASE_URL = "https://api.jolpi.ca/ergast/f1"
+    PAGE_SIZE = 30
 
     def __init__(self) -> None:
         self.client = httpx.Client()
 
     def _get(self, url: str) -> dict:
+        offset = 0
+        all_data: dict | None = None
+
+        while True:
+            separator = "&" if "?" in url else "?"
+
+            page_url = (
+                f"{url}"
+                f"{separator}limit={self.PAGE_SIZE}"
+                f"&offset={offset}"
+            )
+
+            data = self._get_page(page_url)
+
+            if all_data is None:
+                all_data = data
+            else:
+                self._merge_page(all_data, data)
+
+            mrdata = data["MRData"]
+
+            total = int(mrdata["total"])
+            limit = int(mrdata["limit"])
+            current_offset = int(mrdata["offset"])
+
+            next_offset = current_offset + limit
+
+            if next_offset >= total:
+                break
+
+            offset = next_offset
+
+        return all_data
+
+    def _get_page(self, url: str) -> dict:
         for attempt in range(3):
             response = self.client.get(url)
 
@@ -42,6 +78,27 @@ class JolpicaClient:
             return response.json()
 
         raise JolpicaAPIError(f"Request failed for {url}")
+
+    @staticmethod
+    def _merge_page(target: dict, page: dict) -> None:
+        target_mrdata = target["MRData"]
+        page_mrdata = page["MRData"]
+
+        for key, value in page_mrdata.items():
+            if key in ("limit", "offset", "total"):
+                continue
+
+            if not isinstance(value, dict):
+                continue
+
+            target_section = target_mrdata.setdefault(key, {})
+
+            for nested_key, nested_value in value.items():
+                if not isinstance(nested_value, list):
+                    continue
+
+                target_section.setdefault(nested_key, [])
+                target_section[nested_key].extend(nested_value)
 
     def get_races(self, season: int) -> list[Race]:
         url = f"{self.BASE_URL}/{season}.json"
