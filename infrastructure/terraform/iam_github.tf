@@ -83,6 +83,7 @@ resource "aws_iam_policy" "github_actions" {
 
         Action = [
           "lambda:GetFunction",
+          "lambda:GetFunctionConfiguration",
           "lambda:UpdateFunctionCode"
         ]
 
