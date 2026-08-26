@@ -238,3 +238,106 @@ def test_get_results_fails_after_three_429s(respx_mock):
 
     with pytest.raises(JolpicaAPIError, match="Too many requests"):
         client.get_results(2026, 1)
+
+
+def test_get_sprint_results_without_sprint(respx_mock):
+    respx_mock.get(
+        "https://api.jolpi.ca/ergast/f1/2026/1/sprint.json?limit=30&offset=0"
+    ).mock(
+        return_value=Response(
+            200,
+            json={
+                "MRData": {
+                    "limit": "30",
+                    "offset": "0",
+                    "total": "0",
+                    "RaceTable": {"Races": []},
+                }
+            },
+        )
+    )
+
+    assert JolpicaClient().get_sprint_results(2026, 1) == []
+
+
+def test_get_standings_uses_season_endpoints(respx_mock):
+    driver_url = (
+        "https://api.jolpi.ca/ergast/f1/2026/driverstandings.json?"
+        "limit=30&offset=0"
+    )
+    constructor_url = (
+        "https://api.jolpi.ca/ergast/f1/2026/constructorstandings.json?"
+        "limit=30&offset=0"
+    )
+    driver_payload = {
+        "MRData": {
+            "limit": "30",
+            "offset": "0",
+            "total": "1",
+            "StandingsTable": {
+                "StandingsLists": [
+                    {
+                        "season": "2026",
+                        "round": "12",
+                        "DriverStandings": [
+                            {
+                                "position": "1",
+                                "positionText": "1",
+                                "points": "242",
+                                "wins": "6",
+                                "Driver": {
+                                    "driverId": "antonelli",
+                                    "givenName": "Andrea Kimi",
+                                    "familyName": "Antonelli",
+                                },
+                                "Constructors": [
+                                    {
+                                        "constructorId": "mercedes",
+                                        "name": "Mercedes",
+                                        "nationality": "German",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ]
+            },
+        }
+    }
+    constructor_payload = {
+        "MRData": {
+            "limit": "30",
+            "offset": "0",
+            "total": "1",
+            "StandingsTable": {
+                "StandingsLists": [
+                    {
+                        "season": "2026",
+                        "round": "12",
+                        "ConstructorStandings": [
+                            {
+                                "position": "1",
+                                "positionText": "1",
+                                "points": "425",
+                                "wins": "8",
+                                "Constructor": {
+                                    "constructorId": "mercedes",
+                                    "name": "Mercedes",
+                                    "nationality": "German",
+                                },
+                            }
+                        ],
+                    }
+                ]
+            },
+        }
+    }
+    respx_mock.get(driver_url).mock(return_value=Response(200, json=driver_payload))
+    respx_mock.get(constructor_url).mock(
+        return_value=Response(200, json=constructor_payload)
+    )
+
+    client = JolpicaClient()
+
+    assert client.get_driver_standings(2026)[0].round == 12
+    assert client.get_constructor_standings(2026)[0].round == 12

@@ -1,4 +1,11 @@
-from f1_data.models import Constructor, Driver, Race, Result
+from f1_data.models import (
+    Constructor,
+    ConstructorStanding,
+    Driver,
+    DriverStanding,
+    Race,
+    Result,
+)
 
 
 def races_to_records(races: list[Race]) -> list[dict]:
@@ -65,4 +72,56 @@ def results_to_records(results: list[Result]) -> list[dict]:
             "fastest_lap_time": result.fastest_lap_time,
         }
         for result in results
+    ]
+
+
+def sprint_results_to_records(results: list[Result]) -> list[dict]:
+    return results_to_records(results)
+
+
+def driver_standings_to_records(
+    standings: list[DriverStanding],
+) -> list[dict]:
+    return [
+        {
+            "season": standing.season,
+            "round": standing.round,
+            "position": standing.position,
+            "position_text": standing.position_text,
+            "points": standing.points,
+            "wins": standing.wins,
+            "driver_id": standing.driver.id,
+            "permanent_number": standing.driver.permanent_number,
+            "code": standing.driver.code,
+            "first_name": standing.driver.first_name,
+            "last_name": standing.driver.last_name,
+            "date_of_birth": standing.driver.date_of_birth,
+            "nationality": standing.driver.nationality,
+            "constructor_ids": [
+                constructor.id for constructor in standing.constructors
+            ],
+            "constructor_names": [
+                constructor.name for constructor in standing.constructors
+            ],
+        }
+        for standing in standings
+    ]
+
+
+def constructor_standings_to_records(
+    standings: list[ConstructorStanding],
+) -> list[dict]:
+    return [
+        {
+            "season": standing.season,
+            "round": standing.round,
+            "position": standing.position,
+            "position_text": standing.position_text,
+            "points": standing.points,
+            "wins": standing.wins,
+            "constructor_id": standing.constructor.id,
+            "constructor_name": standing.constructor.name,
+            "nationality": standing.constructor.nationality,
+        }
+        for standing in standings
     ]
