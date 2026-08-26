@@ -322,3 +322,48 @@ def test_parse_constructor_standings():
     assert standings[0].season == 2026
     assert standings[0].round == 12
     assert standings[0].constructor.id == "mercedes"
+
+def test_parse_driver_standing_without_position():
+    data = {
+        "MRData": {
+            "StandingsTable": {
+                "StandingsLists": [
+                    {
+                        "season": "2026",
+                        "round": "1",
+                        "DriverStandings": [
+                            {
+                                "positionText": "-",
+                                "points": "0",
+                                "wins": "0",
+                                "Driver": {
+                                    "driverId": "stroll",
+                                    "givenName": "Lance",
+                                    "familyName": "Stroll",
+                                },
+                                "Constructors": [
+                                    {
+                                        "constructorId": "aston_martin",
+                                        "name": "Aston Martin",
+                                        "nationality": "British",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+    }
+
+    standings = parse_driver_standings(data)
+
+    assert len(standings) == 1
+
+    standing = standings[0]
+
+    assert standing.position is None
+    assert standing.position_text == "-"
+    assert standing.points == 0
+    assert standing.wins == 0
+    assert standing.driver.id == "stroll"

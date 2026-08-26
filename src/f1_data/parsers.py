@@ -137,7 +137,11 @@ def parse_driver_standings(data: dict) -> list[DriverStanding]:
         DriverStanding(
             season=season,
             round=round_number,
-            position=int(standing["position"]),
+            position=(
+                int(standing["position"])
+                if standing.get("position") is not None
+                else None
+            ),
             position_text=standing["positionText"],
             points=float(standing["points"]),
             wins=int(standing["wins"]),
@@ -178,7 +182,11 @@ def parse_constructor_standings(data: dict) -> list[ConstructorStanding]:
         ConstructorStanding(
             season=season,
             round=round_number,
-            position=int(standing["position"]),
+            position=(
+                int(standing["position"])
+                if standing.get("position") is not None
+                else None
+            ),
             position_text=standing["positionText"],
             points=float(standing["points"]),
             wins=int(standing["wins"]),

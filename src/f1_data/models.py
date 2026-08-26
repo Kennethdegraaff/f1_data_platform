@@ -65,7 +65,7 @@ class Result(BaseModel):
 class DriverStanding(BaseModel):
     season: int
     round: int
-    position: int
+    position: int | None = None
     position_text: str
     points: float
     wins: int
@@ -76,7 +76,7 @@ class DriverStanding(BaseModel):
 class ConstructorStanding(BaseModel):
     season: int
     round: int
-    position: int
+    position: int | None = None
     position_text: str
     points: float
     wins: int
