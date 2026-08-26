@@ -12,15 +12,21 @@ def add_partition(
     glue = boto3.client("glue")
 
     try:
+        table = glue.get_table(
+            DatabaseName=database_name,
+            Name=table_name,
+        )
+
+        storage_descriptor = table["Table"]["StorageDescriptor"].copy()
+        storage_descriptor["Location"] = location
+
         glue.batch_create_partition(
             DatabaseName=database_name,
             TableName=table_name,
             PartitionInputList=[
                 {
                     "Values": partition_values,
-                    "StorageDescriptor": {
-                        "Location": location,
-                    },
+                    "StorageDescriptor": storage_descriptor,
                 }
             ],
         )
