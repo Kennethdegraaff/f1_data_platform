@@ -75,6 +75,7 @@ def test_new_results_are_processed() -> None:
     with (
         patch("f1_data.pipeline.parquet_exists", return_value=False),
         patch("f1_data.pipeline.write_parquet") as mock_write,
+        patch("f1_data.pipeline.add_results_partition") as mock_partition,
     ):
         process_race_results(
             client,
@@ -94,6 +95,12 @@ def test_new_results_are_processed() -> None:
         "data_collected/2026/results/round=1/results.parquet"
     )
     assert call_args.kwargs["bucket"] == "f1-data-platform"
+
+    mock_partition.assert_called_once_with(
+        season=2026,
+        round_number=1,
+        bucket="f1-data-platform",
+    )
 
 
 def test_future_races_are_skipped() -> None:

@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
+from f1_data.catalog import add_results_partition
 from f1_data.jolpica import JolpicaAPIError, JolpicaClient
 from f1_data.models import Race
 from f1_data.storage import parquet_exists, write_parquet
@@ -84,6 +85,12 @@ def process_race_results(
             write_parquet(
                 records,
                 result_key,
+                bucket=bucket,
+            )
+
+            add_results_partition(
+                season=season,
+                round_number=race.round,
                 bucket=bucket,
             )
 
