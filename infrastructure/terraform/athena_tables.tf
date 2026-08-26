@@ -4,17 +4,12 @@ resource "aws_glue_catalog_table" "races" {
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/races/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/races/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
     ser_de_info {
       serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
-    }
-
-    columns {
-      name = "season"
-      type = "bigint"
     }
 
     columns {
@@ -62,7 +57,13 @@ resource "aws_glue_catalog_table" "races" {
       type = "double"
     }
   }
+
+  partition_keys {
+    name = "season"
+    type = "bigint"
+  }
 }
+
 
 resource "aws_glue_catalog_table" "drivers" {
   name          = "drivers"
@@ -70,7 +71,7 @@ resource "aws_glue_catalog_table" "drivers" {
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/drivers/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/drivers/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
@@ -113,7 +114,13 @@ resource "aws_glue_catalog_table" "drivers" {
       type = "string"
     }
   }
+
+  partition_keys {
+    name = "season"
+    type = "bigint"
+  }
 }
+
 
 resource "aws_glue_catalog_table" "constructors" {
   name          = "constructors"
@@ -121,7 +128,7 @@ resource "aws_glue_catalog_table" "constructors" {
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/constructors/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/constructors/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
@@ -144,15 +151,21 @@ resource "aws_glue_catalog_table" "constructors" {
       type = "string"
     }
   }
+
+  partition_keys {
+    name = "season"
+    type = "bigint"
+  }
 }
 
-resource "aws_glue_catalog_table" "results" {
-  name          = "results"
+
+resource "aws_glue_catalog_table" "race_results" {
+  name          = "race_results"
   database_name = aws_athena_database.f1_data.name
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/results/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/race_results/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
@@ -247,18 +260,24 @@ resource "aws_glue_catalog_table" "results" {
   }
 
   partition_keys {
+    name = "season"
+    type = "bigint"
+  }
+
+  partition_keys {
     name = "round"
     type = "bigint"
   }
 }
 
-resource "aws_glue_catalog_table" "sprint" {
-  name          = "sprint"
+
+resource "aws_glue_catalog_table" "sprint_results" {
+  name          = "sprint_results"
   database_name = aws_athena_database.f1_data.name
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/${var.season}/sprint/"
+    location      = "s3://${aws_s3_bucket.f1_data.bucket}/data_collected/sprint_results/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
@@ -270,72 +289,91 @@ resource "aws_glue_catalog_table" "sprint" {
       name = "season"
       type = "bigint"
     }
+
     columns {
       name = "race_name"
       type = "string"
     }
+
     columns {
       name = "circuit_id"
       type = "string"
     }
+
     columns {
       name = "driver_id"
       type = "string"
     }
+
     columns {
       name = "constructor_id"
       type = "string"
     }
+
     columns {
       name = "number"
       type = "string"
     }
+
     columns {
       name = "position"
       type = "bigint"
     }
+
     columns {
       name = "position_text"
       type = "string"
     }
+
     columns {
       name = "points"
       type = "double"
     }
+
     columns {
       name = "grid"
       type = "bigint"
     }
+
     columns {
       name = "laps"
       type = "bigint"
     }
+
     columns {
       name = "status"
       type = "string"
     }
+
     columns {
       name = "time_millis"
       type = "bigint"
     }
+
     columns {
       name = "time"
       type = "string"
     }
+
     columns {
       name = "fastest_lap_rank"
       type = "bigint"
     }
+
     columns {
       name = "fastest_lap"
       type = "bigint"
     }
+
     columns {
       name = "fastest_lap_time"
       type = "string"
     }
+  }
 
-    # round is the partition column, so it is not repeated here.
+  partition_keys {
+    name = "season"
+    type = "bigint"
   }
 
   partition_keys {
@@ -343,6 +381,7 @@ resource "aws_glue_catalog_table" "sprint" {
     type = "bigint"
   }
 }
+
 
 resource "aws_glue_catalog_table" "driver_standings" {
   name          = "driver_standings"
@@ -362,50 +401,62 @@ resource "aws_glue_catalog_table" "driver_standings" {
       name = "position"
       type = "bigint"
     }
+
     columns {
       name = "position_text"
       type = "string"
     }
+
     columns {
       name = "points"
       type = "double"
     }
+
     columns {
       name = "wins"
       type = "bigint"
     }
+
     columns {
       name = "driver_id"
       type = "string"
     }
+
     columns {
       name = "permanent_number"
       type = "string"
     }
+
     columns {
       name = "code"
       type = "string"
     }
+
     columns {
       name = "first_name"
       type = "string"
     }
+
     columns {
       name = "last_name"
       type = "string"
     }
+
     columns {
       name = "date_of_birth"
       type = "date"
     }
+
     columns {
       name = "nationality"
       type = "string"
     }
+
     columns {
       name = "constructor_ids"
       type = "array<string>"
     }
+
     columns {
       name = "constructor_names"
       type = "array<string>"
@@ -416,11 +467,13 @@ resource "aws_glue_catalog_table" "driver_standings" {
     name = "season"
     type = "bigint"
   }
+
   partition_keys {
     name = "round"
     type = "bigint"
   }
 }
+
 
 resource "aws_glue_catalog_table" "constructor_standings" {
   name          = "constructor_standings"
@@ -440,26 +493,32 @@ resource "aws_glue_catalog_table" "constructor_standings" {
       name = "position"
       type = "bigint"
     }
+
     columns {
       name = "position_text"
       type = "string"
     }
+
     columns {
       name = "points"
       type = "double"
     }
+
     columns {
       name = "wins"
       type = "bigint"
     }
+
     columns {
       name = "constructor_id"
       type = "string"
     }
+
     columns {
       name = "constructor_name"
       type = "string"
     }
+
     columns {
       name = "nationality"
       type = "string"
@@ -470,6 +529,7 @@ resource "aws_glue_catalog_table" "constructor_standings" {
     name = "season"
     type = "bigint"
   }
+
   partition_keys {
     name = "round"
     type = "bigint"
