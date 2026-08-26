@@ -43,6 +43,15 @@ resource "aws_iam_policy" "lambda_s3" {
         ]
 
         Resource = aws_s3_bucket.f1_data.arn
+      },
+      {
+        Effect = "Allow"
+
+        Action = [
+          "glue:BatchCreatePartition"
+        ]
+
+        Resource = "*"
       }
     ]
   })
