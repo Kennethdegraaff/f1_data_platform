@@ -118,7 +118,6 @@ def test_get_drivers_handles_pagination():
 
     assert first_page.called
     assert second_page.called
-
     assert len(drivers) == 2
 
     driver_ids = [driver.id for driver in drivers]
@@ -126,7 +125,6 @@ def test_get_drivers_handles_pagination():
     assert "russell" in driver_ids
     assert "max_verstappen" in driver_ids
 
-    client = JolpicaClient()
 
 def test_get_results(respx_mock):
     payload = {
@@ -169,8 +167,11 @@ def test_get_results(respx_mock):
     }
 
     respx_mock.get(
-        "https://api.jolpi.ca/ergast/f1/2026/1/results.json?limit=30&offset=0"
-    ).mock(return_value=Response(200, json=payload))
+        "https://api.jolpi.ca/ergast/f1/2026/1/results.json?"
+        "limit=30&offset=0"
+    ).mock(
+        return_value=Response(200, json=payload)
+    )
 
     client = JolpicaClient()
 
@@ -208,9 +209,7 @@ def test_get_results_retries_after_429(respx_mock):
         ),
     ]
 
-    route = respx_mock.get(url).mock(
-        side_effect=responses
-    )
+    route = respx_mock.get(url).mock(side_effect=responses)
 
     client = JolpicaClient()
 
@@ -236,13 +235,17 @@ def test_get_results_fails_after_three_429s(respx_mock):
 
     client = JolpicaClient()
 
-    with pytest.raises(JolpicaAPIError, match="Too many requests"):
+    with pytest.raises(
+        JolpicaAPIError,
+        match="Too many requests",
+    ):
         client.get_results(2026, 1)
 
 
 def test_get_sprint_results_without_sprint(respx_mock):
     respx_mock.get(
-        "https://api.jolpi.ca/ergast/f1/2026/1/sprint.json?limit=30&offset=0"
+        "https://api.jolpi.ca/ergast/f1/2026/1/sprint.json?"
+        "limit=30&offset=0"
     ).mock(
         return_value=Response(
             200,
@@ -251,7 +254,9 @@ def test_get_sprint_results_without_sprint(respx_mock):
                     "limit": "30",
                     "offset": "0",
                     "total": "0",
-                    "RaceTable": {"Races": []},
+                    "RaceTable": {
+                        "Races": []
+                    },
                 }
             },
         )
@@ -260,15 +265,17 @@ def test_get_sprint_results_without_sprint(respx_mock):
     assert JolpicaClient().get_sprint_results(2026, 1) == []
 
 
-def test_get_standings_uses_season_endpoints(respx_mock):
+def test_get_standings_uses_round_endpoints(respx_mock):
     driver_url = (
-        "https://api.jolpi.ca/ergast/f1/2026/driverstandings.json?"
-        "limit=30&offset=0"
+        "https://api.jolpi.ca/ergast/f1/2026/12/"
+        "driverstandings.json?limit=30&offset=0"
     )
+
     constructor_url = (
-        "https://api.jolpi.ca/ergast/f1/2026/constructorstandings.json?"
-        "limit=30&offset=0"
+        "https://api.jolpi.ca/ergast/f1/2026/12/"
+        "constructorstandings.json?limit=30&offset=0"
     )
+
     driver_payload = {
         "MRData": {
             "limit": "30",
@@ -304,6 +311,7 @@ def test_get_standings_uses_season_endpoints(respx_mock):
             },
         }
     }
+
     constructor_payload = {
         "MRData": {
             "limit": "30",
@@ -332,12 +340,25 @@ def test_get_standings_uses_season_endpoints(respx_mock):
             },
         }
     }
-    respx_mock.get(driver_url).mock(return_value=Response(200, json=driver_payload))
+
+    respx_mock.get(driver_url).mock(
+        return_value=Response(
+            200,
+            json=driver_payload,
+        )
+    )
+
     respx_mock.get(constructor_url).mock(
-        return_value=Response(200, json=constructor_payload)
+        return_value=Response(
+            200,
+            json=constructor_payload,
+        )
     )
 
     client = JolpicaClient()
 
-    assert client.get_driver_standings(2026)[0].round == 12
-    assert client.get_constructor_standings(2026)[0].round == 12
+    driver_standings = client.get_driver_standings(2026, 12)
+    constructor_standings = client.get_constructor_standings(2026, 12)
+
+    assert driver_standings[0].round == 12
+    assert constructor_standings[0].round == 12

@@ -140,8 +140,10 @@ class JolpicaClient:
 
         return parse_sprint_results(data)
 
-    def get_driver_standings(self, season: int) -> list[DriverStanding]:
-        url = f"{self.BASE_URL}/{season}/driverstandings.json"
+    def get_driver_standings(
+        self, season: int, round_number: int
+    ) -> list[DriverStanding]:
+        url = f"{self.BASE_URL}/{season}/{round_number}/driverstandings.json"
         data = self._get(url)
 
         return parse_driver_standings(data)
@@ -149,8 +151,12 @@ class JolpicaClient:
     def get_constructor_standings(
         self,
         season: int,
+        round_number: int,
     ) -> list[ConstructorStanding]:
-        url = f"{self.BASE_URL}/{season}/constructorstandings.json"
+        url = (
+            f"{self.BASE_URL}/{season}/{round_number}/"
+            "constructorstandings.json"
+        )
         data = self._get(url)
 
         return parse_constructor_standings(data)

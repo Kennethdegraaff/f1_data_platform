@@ -10,12 +10,6 @@ variable "aws_region" {
   default     = "eu-central-1"
 }
 
-variable "season" {
-  description = "F1 season"
-  type        = number
-  default     = 2026
-}
-
 variable "athena_database_name" {
   description = "Name of the Athena database"
   type        = string

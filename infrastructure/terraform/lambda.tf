@@ -11,7 +11,8 @@ resource "aws_lambda_function" "f1_data_platform" {
 
   environment {
     variables = {
-      F1_DATA_BUCKET = aws_s3_bucket.f1_data.bucket
+      F1_DATA_BUCKET       = aws_s3_bucket.f1_data.bucket
+      ATHENA_DATABASE_NAME = var.athena_database_name
     }
   }
 
