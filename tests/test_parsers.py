@@ -1,8 +1,11 @@
 from f1_data.parsers import (
+    parse_constructor_standings,
     parse_constructors,
+    parse_driver_standings,
     parse_drivers,
     parse_races,
     parse_results,
+    parse_sprint_results,
 )
 
 
@@ -205,3 +208,117 @@ def test_parse_results():
     assert result.fastest_lap_rank == 6
     assert result.fastest_lap == 21
     assert result.fastest_lap_time == "1:22.670"
+
+
+def test_parse_sprint_results():
+    data = {
+        "MRData": {
+            "RaceTable": {
+                "Races": [
+                    {
+                        "season": "2026",
+                        "round": "2",
+                        "raceName": "Chinese Grand Prix",
+                        "Circuit": {"circuitId": "shanghai"},
+                        "SprintResults": [
+                            {
+                                "number": "63",
+                                "position": "1",
+                                "positionText": "1",
+                                "points": "8",
+                                "Driver": {"driverId": "russell"},
+                                "Constructor": {"constructorId": "mercedes"},
+                                "grid": "1",
+                                "laps": "19",
+                                "status": "Finished",
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+    }
+
+    results = parse_sprint_results(data)
+
+    assert len(results) == 1
+    assert results[0].round == 2
+    assert results[0].points == 8
+
+
+def test_parse_driver_standings():
+    data = {
+        "MRData": {
+            "StandingsTable": {
+                "StandingsLists": [
+                    {
+                        "season": "2026",
+                        "round": "12",
+                        "DriverStandings": [
+                            {
+                                "position": "1",
+                                "positionText": "1",
+                                "points": "242",
+                                "wins": "6",
+                                "Driver": {
+                                    "driverId": "antonelli",
+                                    "givenName": "Andrea Kimi",
+                                    "familyName": "Antonelli",
+                                },
+                                "Constructors": [
+                                    {
+                                        "constructorId": "mercedes",
+                                        "name": "Mercedes",
+                                        "nationality": "German",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+    }
+
+    standings = parse_driver_standings(data)
+
+    assert len(standings) == 1
+    assert standings[0].season == 2026
+    assert standings[0].round == 12
+    assert standings[0].driver.id == "antonelli"
+    assert standings[0].constructors[0].id == "mercedes"
+
+
+def test_parse_constructor_standings():
+    data = {
+        "MRData": {
+            "StandingsTable": {
+                "StandingsLists": [
+                    {
+                        "season": "2026",
+                        "round": "12",
+                        "ConstructorStandings": [
+                            {
+                                "position": "1",
+                                "positionText": "1",
+                                "points": "425",
+                                "wins": "8",
+                                "Constructor": {
+                                    "constructorId": "mercedes",
+                                    "name": "Mercedes",
+                                    "nationality": "German",
+                                },
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+    }
+
+    standings = parse_constructor_standings(data)
+
+    assert len(standings) == 1
+    assert standings[0].season == 2026
+    assert standings[0].round == 12
+    assert standings[0].constructor.id == "mercedes"

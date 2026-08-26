@@ -2,12 +2,22 @@ import time
 
 import httpx
 
-from f1_data.models import Constructor, Driver, Race, Result
+from f1_data.models import (
+    Constructor,
+    ConstructorStanding,
+    Driver,
+    DriverStanding,
+    Race,
+    Result,
+)
 from f1_data.parsers import (
+    parse_constructor_standings,
     parse_constructors,
+    parse_driver_standings,
     parse_drivers,
     parse_races,
     parse_results,
+    parse_sprint_results,
 )
 
 
@@ -123,3 +133,24 @@ class JolpicaClient:
         data = self._get(url)
 
         return parse_results(data)
+
+    def get_sprint_results(self, season: int, round: int) -> list[Result]:
+        url = f"{self.BASE_URL}/{season}/{round}/sprint.json"
+        data = self._get(url)
+
+        return parse_sprint_results(data)
+
+    def get_driver_standings(self, season: int) -> list[DriverStanding]:
+        url = f"{self.BASE_URL}/{season}/driverstandings.json"
+        data = self._get(url)
+
+        return parse_driver_standings(data)
+
+    def get_constructor_standings(
+        self,
+        season: int,
+    ) -> list[ConstructorStanding]:
+        url = f"{self.BASE_URL}/{season}/constructorstandings.json"
+        data = self._get(url)
+
+        return parse_constructor_standings(data)

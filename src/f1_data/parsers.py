@@ -1,7 +1,9 @@
 from f1_data.models import (
     Circuit,
     Constructor,
+    ConstructorStanding,
     Driver,
+    DriverStanding,
     Race,
     Result,
 )
@@ -57,12 +59,20 @@ def parse_constructors(data: dict) -> list[Constructor]:
     ]
 
 def parse_results(data: dict) -> list[Result]:
+    return _parse_race_results(data, "Results")
+
+
+def parse_sprint_results(data: dict) -> list[Result]:
+    return _parse_race_results(data, "SprintResults")
+
+
+def _parse_race_results(data: dict, result_key: str) -> list[Result]:
     races = data["MRData"]["RaceTable"]["Races"]
 
     results = []
 
     for race in races:
-        for result in race["Results"]:
+        for result in race[result_key]:
             time_data = result.get("Time")
             fastest_lap = result.get("FastestLap")
 
@@ -110,3 +120,73 @@ def parse_results(data: dict) -> list[Result]:
             )
 
     return results
+
+
+def parse_driver_standings(data: dict) -> list[DriverStanding]:
+    standings_table = data["MRData"]["StandingsTable"]
+    standings_lists = standings_table["StandingsLists"]
+
+    if not standings_lists:
+        return []
+
+    standings_list = standings_lists[0]
+    season = int(standings_list["season"])
+    round_number = int(standings_list["round"])
+
+    return [
+        DriverStanding(
+            season=season,
+            round=round_number,
+            position=int(standing["position"]),
+            position_text=standing["positionText"],
+            points=float(standing["points"]),
+            wins=int(standing["wins"]),
+            driver=Driver(
+                id=standing["Driver"]["driverId"],
+                permanent_number=standing["Driver"].get("permanentNumber"),
+                code=standing["Driver"].get("code"),
+                first_name=standing["Driver"]["givenName"],
+                last_name=standing["Driver"]["familyName"],
+                date_of_birth=standing["Driver"].get("dateOfBirth"),
+                nationality=standing["Driver"].get("nationality"),
+            ),
+            constructors=[
+                Constructor(
+                    id=constructor["constructorId"],
+                    name=constructor["name"],
+                    nationality=constructor["nationality"],
+                )
+                for constructor in standing["Constructors"]
+            ],
+        )
+        for standing in standings_list["DriverStandings"]
+    ]
+
+
+def parse_constructor_standings(data: dict) -> list[ConstructorStanding]:
+    standings_table = data["MRData"]["StandingsTable"]
+    standings_lists = standings_table["StandingsLists"]
+
+    if not standings_lists:
+        return []
+
+    standings_list = standings_lists[0]
+    season = int(standings_list["season"])
+    round_number = int(standings_list["round"])
+
+    return [
+        ConstructorStanding(
+            season=season,
+            round=round_number,
+            position=int(standing["position"]),
+            position_text=standing["positionText"],
+            points=float(standing["points"]),
+            wins=int(standing["wins"]),
+            constructor=Constructor(
+                id=standing["Constructor"]["constructorId"],
+                name=standing["Constructor"]["name"],
+                nationality=standing["Constructor"]["nationality"],
+            ),
+        )
+        for standing in standings_list["ConstructorStandings"]
+    ]

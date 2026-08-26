@@ -60,3 +60,24 @@ class Result(BaseModel):
     fastest_lap_rank: int | None = None
     fastest_lap: int | None = None
     fastest_lap_time: str | None = None
+
+
+class DriverStanding(BaseModel):
+    season: int
+    round: int
+    position: int
+    position_text: str
+    points: float
+    wins: int
+    driver: Driver
+    constructors: list[Constructor]
+
+
+class ConstructorStanding(BaseModel):
+    season: int
+    round: int
+    position: int
+    position_text: str
+    points: float
+    wins: int
+    constructor: Constructor
