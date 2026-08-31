@@ -1,5 +1,8 @@
 # 🏎️ F1 Data Platform
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.12%2B-blue.svg)
+
 An ongoing personal **Data Engineering project** for collecting,
 processing, storing and querying Formula 1 data.
 
@@ -10,6 +13,21 @@ queried using **Amazon Athena**.
 
 The project is continuously evolving as I explore and implement new
 Data Engineering concepts and practices.
+
+## 📑 Table of Contents
+
+- [Architecture](#🏗️-architecture)
+- [Features](#🚀-features)
+- [Data](#📊-data)
+- [Data Visualization](#📈-data-visualization)
+- [Data Pipeline](#🔄-data-pipeline)
+- [Project Structure](#🗂️-project-structure)
+- [Tech Stack](#🛠️-tech-stack)
+- [CI/CD](#🔄-cicd)
+- [Testing](#🧪-testing)
+- [Local Development](#💻-local-development)
+- [Project Status & Goals](#📌-project-status--goals)
+- [License](#📄-license)
 
 ## 🏗️ Architecture
 
@@ -40,43 +58,23 @@ flowchart TD
     Athena --> Grafana
 ```
 
-### CI/CD
-
-```mermaid
-flowchart LR
-    GitHub["GitHub"]
-    Actions["GitHub Actions"]
-    Tests["pytest"]
-    Docker["Docker Build"]
-    ECR["Amazon ECR"]
-    Lambda["AWS Lambda"]
-
-    GitHub -->|Push to main| Actions
-    Actions --> Tests
-    Tests --> Docker
-    Docker --> ECR
-    ECR --> Lambda
-```
-
 GitHub Actions authenticates with AWS using **OIDC** and an IAM role,
-avoiding the use of long-lived AWS credentials in GitHub.
+avoiding the use of long-lived AWS credentials in GitHub. See
+[CI/CD](#🔄-cicd) for the full deployment flow.
 
 ## 🚀 Features
 
 - Automated ingestion from the Jolpica F1 API
-- Python-based data processing and transformation
-- Parquet-based datasets
-- Historical race and championship data
 - Season and round based data partitioning
 - Idempotent processing to avoid unnecessary reprocessing
-- AWS Glue Data Catalog partition management
 - SQL analytics through Amazon Athena
-- Serverless execution with AWS Lambda
-- Scheduled execution with EventBridge Scheduler
+- Serverless, scheduled execution (Lambda + EventBridge)
 - Infrastructure as Code with Terraform
-- Docker containerization
-- CI/CD with GitHub Actions
-- Automated testing with pytest
+- Containerized deployment with Docker and Amazon ECR
+- Automated testing and CI/CD with GitHub Actions
+
+A full breakdown of the technologies behind these features is listed
+under [Tech Stack](#🛠️-tech-stack).
 
 ## 📊 Data
 
@@ -159,58 +157,38 @@ but catalog registration was not completed.
 
 ## 🛠️ Tech Stack
 
-### Programming & Data
+| Category | Technologies |
+| --- | --- |
+| **Programming & Data** | Python, SQL, Parquet, pytest |
+| **AWS** | S3, Glue Data Catalog, Athena, Lambda, EventBridge Scheduler, ECR, IAM |
+| **Infrastructure & DevOps** | Terraform, Docker, GitHub Actions, Git |
+| **Visualization** | Grafana |
 
-- Python
-- SQL
-- Parquet
-- pytest
-
-### AWS
-
-- Amazon S3
-- AWS Glue Data Catalog
-- Amazon Athena
-- AWS Lambda
-- EventBridge Scheduler
-- Amazon ECR
-- IAM
-
-### Infrastructure & DevOps
-
-- Terraform
-- Docker
-- GitHub Actions
-- Git
-
-## ☁️ Infrastructure
-
-The AWS infrastructure is managed using **Terraform**.
-
-The Terraform configuration currently manages resources including:
-
-- Amazon S3
-- AWS Lambda
-- EventBridge Scheduler
-- Amazon ECR
-- IAM
-- AWS Glue Data Catalog
-- Amazon Athena
-
-Infrastructure is version controlled alongside the application code,
-allowing the cloud environment to be managed as Infrastructure as Code.
-
-## 🐳 Docker
-
-The data pipeline is packaged as a Docker container using the AWS Lambda
-Python 3.12 base image.
-
-The container image is built by GitHub Actions and pushed to Amazon ECR.
-AWS Lambda then runs the containerized pipeline.
+The Terraform configuration manages all AWS resources listed above,
+keeping infrastructure version-controlled alongside the application code.
+The pipeline itself is packaged as a Docker container using the AWS
+Lambda Python 3.12 base image, built and deployed via the CI/CD workflow
+below.
 
 ## 🔄 CI/CD
 
 The project uses **GitHub Actions** for automated testing and deployment.
+
+```mermaid
+flowchart LR
+    GitHub["GitHub"]
+    Actions["GitHub Actions"]
+    Tests["pytest"]
+    Docker["Docker Build"]
+    ECR["Amazon ECR"]
+    Lambda["AWS Lambda"]
+
+    GitHub -->|Push to main| Actions
+    Actions --> Tests
+    Tests --> Docker
+    Docker --> ECR
+    ECR --> Lambda
+```
 
 On every push to the `main` branch, the workflow:
 
@@ -227,19 +205,15 @@ to a deployed version of the data pipeline.
 ## 🧪 Testing
 
 The project includes automated tests covering the main components of
-the data platform.
-
-Tests are written with **pytest** and cover areas including:
+the data platform, written with **pytest**:
 
 - API client behaviour
-- Data parsing
-- Data transformation
-- S3 storage
-- Glue Catalog operations
+- Data parsing and transformation
+- S3 storage and Glue Catalog operations
 - Pipeline processing
 
-The test suite is automatically executed as part of the GitHub Actions
-CI/CD workflow.
+The test suite is automatically executed as part of the CI/CD workflow
+above.
 
 ## 💻 Local Development
 
@@ -258,6 +232,23 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+### Configure AWS access
+
+No `.env` file is used. AWS access is handled per context:
+
+- **Local:** the AWS CLI / `boto3` uses your locally configured AWS
+  credentials (`aws configure`).
+- **Terraform:** also uses your local AWS CLI credentials to manage
+  infrastructure.
+- **GitHub Actions:** authenticates via GitHub OIDC and an IAM role
+  (no stored credentials).
+- **AWS Lambda:** required environment variables (e.g.
+  `F1_DATA_BUCKET`, `ATHENA_DATABASE_NAME`) are provided by Terraform
+  as part of the infrastructure deployment.
+
+Make sure your AWS CLI is configured (`aws configure`) before running
+the pipeline or Terraform locally.
+
 ### Run tests
 
 ```bash
@@ -270,12 +261,14 @@ pytest
 python run_pipeline.py
 ```
 
-AWS credentials and the required environment variables must be
-configured when running the pipeline locally.
+## 📌 Project Status & Goals
 
-## 📌 Project Status
+**Status: Ongoing**
 
-**Ongoing**
+This project is both a practical portfolio project and a way to
+continuously develop my Data Engineering skills, with a focus on data
+ingestion, transformation, cloud data platforms, Infrastructure as Code,
+and data quality/reliability.
 
 Current work includes:
 
@@ -283,22 +276,9 @@ Current work includes:
 - Improving pipeline reliability
 - Further developing the AWS data architecture
 - Expanding automated tests and CI/CD
-- Adding comprehensive project documentation
-- Improving the project README and architecture documentation
+- Improving the Grafana dashboards
+- Improving project documentation and architecture diagrams
 
-## 🎯 Project Goals
+## 📄 License
 
-This project is both a practical portfolio project and a way to
-continuously develop my Data Engineering skills.
-
-The main areas of focus are:
-
-- Data ingestion
-- Data transformation
-- Data pipelines
-- Cloud data platforms
-- Data lakes
-- Infrastructure as Code
-- Automation
-- Testing and reliability
-- Analytical data access
+This project is licensed under the [MIT License](LICENSE).
