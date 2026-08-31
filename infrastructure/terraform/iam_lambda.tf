@@ -48,6 +48,7 @@ resource "aws_iam_policy" "lambda_s3" {
         Effect = "Allow"
 
         Action = [
+          "glue:GetTable",
           "glue:BatchCreatePartition"
         ]
 

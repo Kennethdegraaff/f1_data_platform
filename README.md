@@ -98,11 +98,17 @@ AWS Glue Data Catalog for querying through Amazon Athena.
 ## 📈 Data Visualization
 
 The platform is also connected to Grafana for data visualization and
-dashboarding.
+dashboarding, allowing the collected data to be explored through
+interactive dashboards.
 
 The Grafana integration is currently being further developed, with a
 focus on improving the dashboards and presenting the collected F1 data
 more effectively.
+
+![F1 Data Platform Grafana Dashboard](docs/images/grafana-dashboard.png)
+
+*Example Grafana dashboard using data collected and processed by the
+F1 Data Platform.*
 
 ## 🔄 Data Pipeline
 
