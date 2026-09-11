@@ -174,11 +174,6 @@ resource "aws_glue_catalog_table" "race_results" {
     }
 
     columns {
-      name = "season"
-      type = "bigint"
-    }
-
-    columns {
       name = "race_name"
       type = "string"
     }
@@ -283,11 +278,6 @@ resource "aws_glue_catalog_table" "sprint_results" {
 
     ser_de_info {
       serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
-    }
-
-    columns {
-      name = "season"
-      type = "bigint"
     }
 
     columns {
