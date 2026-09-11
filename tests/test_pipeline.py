@@ -54,14 +54,13 @@ def test_resolve_season_with_explicit_season() -> None:
 def test_resolve_season_without_season() -> None:
     with patch("f1_data.pipeline.datetime") as mock_datetime:
         mock_datetime.now.return_value.year = 2026
-
         assert resolve_season(None) == 2026
 
 
 def test_process_reference_data() -> None:
     client = Mock()
-
     races = [make_race()]
+
     drivers = [
         Driver(
             id="russell",
@@ -69,6 +68,7 @@ def test_process_reference_data() -> None:
             last_name="Russell",
         )
     ]
+
     constructors = [
         Constructor(
             id="mercedes",
@@ -95,7 +95,6 @@ def test_process_reference_data() -> None:
         )
 
     assert result == races
-
     assert mock_write.call_count == 3
     assert mock_partition.call_count == 3
 
@@ -143,7 +142,6 @@ def test_process_reference_data_writes_expected_paths() -> None:
 
 def test_new_results_are_processed() -> None:
     client = Mock()
-
     race = make_race()
 
     result = Result(
@@ -202,7 +200,6 @@ def test_new_results_are_processed() -> None:
 
 def test_existing_results_are_not_downloaded_again() -> None:
     client = Mock()
-
     race = make_race()
 
     with (
@@ -266,7 +263,6 @@ def test_future_race_results_are_skipped() -> None:
 
 def test_jolpica_error_is_logged_for_results(capsys) -> None:
     client = Mock()
-
     race = make_race()
 
     client.get_results.side_effect = JolpicaAPIError(
@@ -363,7 +359,6 @@ def test_new_sprint_results_are_processed() -> None:
 
 def test_existing_sprint_results_are_not_downloaded_again() -> None:
     client = Mock()
-
     race = make_race(round_number=2)
 
     with (
@@ -398,7 +393,6 @@ def test_existing_sprint_results_are_not_downloaded_again() -> None:
 
 def test_no_sprint_results_are_skipped() -> None:
     client = Mock()
-
     race = make_race(round_number=2)
 
     client.get_sprint_results.return_value = []
@@ -426,9 +420,8 @@ def test_no_sprint_results_are_skipped() -> None:
     mock_partition.assert_not_called()
 
 
-def test_new_driver_standings_are_stored_as_new_round_snapshot() -> None:
+def test_driver_standings_are_updated_when_race_results_exist() -> None:
     client = Mock()
-
     race = make_race(round_number=12)
 
     client.get_driver_standings.return_value = [
@@ -457,7 +450,7 @@ def test_new_driver_standings_are_stored_as_new_round_snapshot() -> None:
     with (
         patch(
             "f1_data.pipeline.parquet_exists",
-            return_value=False,
+            return_value=True,
         ),
         patch("f1_data.pipeline.write_parquet") as mock_write,
         patch(
@@ -494,15 +487,14 @@ def test_new_driver_standings_are_stored_as_new_round_snapshot() -> None:
     )
 
 
-def test_existing_driver_standings_snapshot_registers_partition() -> None:
+def test_driver_standings_are_skipped_when_race_results_do_not_exist() -> None:
     client = Mock()
-
     race = make_race(round_number=12)
 
     with (
         patch(
             "f1_data.pipeline.parquet_exists",
-            return_value=True,
+            return_value=False,
         ),
         patch("f1_data.pipeline.write_parquet") as mock_write,
         patch(
@@ -520,18 +512,11 @@ def test_existing_driver_standings_snapshot_registers_partition() -> None:
 
     client.get_driver_standings.assert_not_called()
     mock_write.assert_not_called()
-
-    mock_partition.assert_called_once_with(
-        2026,
-        12,
-        BUCKET,
-        DATABASE_NAME,
-    )
+    mock_partition.assert_not_called()
 
 
 def test_driver_standings_jolpica_error_is_logged(capsys) -> None:
     client = Mock()
-
     race = make_race(round_number=12)
 
     client.get_driver_standings.side_effect = JolpicaAPIError(
@@ -540,7 +525,7 @@ def test_driver_standings_jolpica_error_is_logged(capsys) -> None:
 
     with patch(
         "f1_data.pipeline.parquet_exists",
-        return_value=False,
+        return_value=True,
     ):
         process_driver_standings(
             client,
@@ -557,9 +542,8 @@ def test_driver_standings_jolpica_error_is_logged(capsys) -> None:
     assert "temporary error" in captured.out
 
 
-def test_new_constructor_standings_are_stored_as_new_round_snapshot() -> None:
+def test_constructor_standings_are_updated_when_race_results_exist() -> None:
     client = Mock()
-
     race = make_race(round_number=12)
 
     client.get_constructor_standings.return_value = [
@@ -581,7 +565,7 @@ def test_new_constructor_standings_are_stored_as_new_round_snapshot() -> None:
     with (
         patch(
             "f1_data.pipeline.parquet_exists",
-            return_value=False,
+            return_value=True,
         ),
         patch("f1_data.pipeline.write_parquet") as mock_write,
         patch(
@@ -618,15 +602,14 @@ def test_new_constructor_standings_are_stored_as_new_round_snapshot() -> None:
     )
 
 
-def test_existing_constructor_standings_snapshot_registers_partition() -> None:
+def test_constructor_standings_are_skipped_when_race_results_do_not_exist() -> None:
     client = Mock()
-
     race = make_race(round_number=12)
 
     with (
         patch(
             "f1_data.pipeline.parquet_exists",
-            return_value=True,
+            return_value=False,
         ),
         patch("f1_data.pipeline.write_parquet") as mock_write,
         patch(
@@ -644,18 +627,11 @@ def test_existing_constructor_standings_snapshot_registers_partition() -> None:
 
     client.get_constructor_standings.assert_not_called()
     mock_write.assert_not_called()
-
-    mock_partition.assert_called_once_with(
-        2026,
-        12,
-        BUCKET,
-        DATABASE_NAME,
-    )
+    mock_partition.assert_not_called()
 
 
 def test_constructor_standings_jolpica_error_is_logged(capsys) -> None:
     client = Mock()
-
     race = make_race(round_number=12)
 
     client.get_constructor_standings.side_effect = JolpicaAPIError(
@@ -664,7 +640,7 @@ def test_constructor_standings_jolpica_error_is_logged(capsys) -> None:
 
     with patch(
         "f1_data.pipeline.parquet_exists",
-        return_value=False,
+        return_value=True,
     ):
         process_constructor_standings(
             client,

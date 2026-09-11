@@ -215,7 +215,14 @@ def process_driver_standings(
 ) -> None:
     for race in races:
         try:
-            if race.date > datetime.now(UTC).date():
+            results_key = (
+                Path("data_collected/race_results")
+                / f"season={season}"
+                / f"round={race.round}"
+                / "race_results.parquet"
+            )
+
+            if not parquet_exists(results_key, bucket):
                 continue
 
             standings_key = (
@@ -224,15 +231,6 @@ def process_driver_standings(
                 / f"round={race.round}"
                 / "driver_standings.parquet"
             )
-
-            if parquet_exists(standings_key, bucket):
-                add_driver_standings_partition(
-                    season,
-                    race.round,
-                    bucket,
-                    database_name,
-                )
-                continue
 
             standings = client.get_driver_standings(
                 season,
@@ -271,7 +269,14 @@ def process_constructor_standings(
 ) -> None:
     for race in races:
         try:
-            if race.date > datetime.now(UTC).date():
+            results_key = (
+                Path("data_collected/race_results")
+                / f"season={season}"
+                / f"round={race.round}"
+                / "race_results.parquet"
+            )
+
+            if not parquet_exists(results_key, bucket):
                 continue
 
             standings_key = (
@@ -280,15 +285,6 @@ def process_constructor_standings(
                 / f"round={race.round}"
                 / "constructor_standings.parquet"
             )
-
-            if parquet_exists(standings_key, bucket):
-                add_constructor_standings_partition(
-                    season,
-                    race.round,
-                    bucket,
-                    database_name,
-                )
-                continue
 
             standings = client.get_constructor_standings(
                 season,
